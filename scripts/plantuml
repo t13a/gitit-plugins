@@ -1,0 +1,25 @@
+#!/usr/bin/python
+
+import argparse
+import os
+import plantuml
+import sys
+
+def to_case_insensitive(L):
+    return map(str.lower, L)
+
+# immitate 'plantuml.jar' command (only support few options)
+parser = argparse.ArgumentParser()
+parser.add_argument('-tpng', dest='format', action='store_const', const='png',
+                    default='png')
+parser.add_argument('-tsvg', dest='format', action='store_const', const='svg')
+parser.add_argument('-ttxt', dest='format', action='store_const', const='txt')
+parser.add_argument('-p', '-pipe', action='store_true', required=True)
+
+args = parser.parse_known_args(args=to_case_insensitive(sys.argv))[0]
+
+text = "".join(sys.stdin.readlines())
+url = "%s/%s/" % (os.getenv('PLANTUML_SERVER_URL',
+                            'http://www.plantuml.com/plantuml'),
+                  args.format)
+sys.stdout.buffer.write(plantuml.PlantUML(url=url).processes(text))
