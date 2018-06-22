@@ -27,11 +27,11 @@ plugin = mkPageTransformM transformBlock
 transformBlock :: Block -> PluginM Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "graphviz" `elem` classes = do
   cfg <- askConfig
-  let filetype = "svg"
-  let (name, basename) = case lookup "name" namevals of
-                         Just fn -> ([Str fn], fn)
-                         Nothing -> ([], uniqueName contents)
-  let outfile = "dot-" ++ basename ++ "." ++ filetype
+  let (name, filename) = case lookup "name" namevals of
+                           Just fn -> ([Str fn], fn)
+                           Nothing -> ([], uniqueName contents)
+      filetype         = "svg"
+      outfile          = "dot-" ++ filename ++ "." ++ filetype
   liftIO $ do
     (ec, _out, err) <- readProcessWithExitCode "dot"
                        ["-T" ++ filetype,

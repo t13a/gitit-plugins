@@ -11,7 +11,7 @@ module PlantUml (plugin) where
 -- Alice <-- Bob: another authentication Response
 -- ~~~
 --
--- The "dot" and "plantuml" executable must be in the path.
+-- The "plantuml" executable must be in the path.
 -- The generated svg file will be saved in the static img directory.
 -- If no name is specified, a unique name will be generated from a hash
 -- of the file contents.
@@ -24,25 +24,31 @@ import System.Exit (ExitCode(ExitSuccess))
 import Data.ByteString.Lazy.UTF8 (fromString)
 -- from the SHA package on HackageDB:
 import Data.Digest.Pure.SHA (sha1, showDigest)
+import Data.String.Utils (startswith)
 import System.FilePath ((</>))
 import System.IO
 
 plugin :: Plugin
 plugin = mkPageTransformM transformBlock
 
+normalize :: String -> String
+normalize x = if startswith "@start" x
+                then "@startuml\n" ++ x ++ "\n@enduml\n"
+                else x
+
 transformBlock :: Block -> PluginM Block
 transformBlock (CodeBlock (_, classes, namevals) contents) | "plantuml" `elem` classes = do
   cfg <- askConfig
-  let filetype = "svg" 
-  let (name, basename) = case lookup "name" namevals of
-                         Just fn -> ([Str fn], fn)
-                         Nothing -> ([], uniqueName contents)
-  let outfile = "plantuml-" ++ basename ++ "." ++ filetype
+  let (name, filename) = case lookup "name" namevals of
+                           Just fn -> ([Str fn], fn)
+                           Nothing -> ([], uniqueName contents)
+      filetype         = "svg"
+      outfile          = "plantuml-" ++ filename ++ "." ++ filetype
   liftIO $ do
     (ec, out, err) <- readProcessWithExitCode "plantuml"
                       ["-t" ++ filetype,
                        "-p"
-                      ] ("@startuml\n" ++ contents ++ "\n@enduml" )
+                      ] (normalize contents)
     let attr = ("image", [], [])
     if ec == ExitSuccess
       then do
