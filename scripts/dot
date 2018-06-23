@@ -1,5 +1,6 @@
 #!/usr/bin/python
-
+ # -*- coding: utf-8 -*-
+ 
 import argparse
 import subprocess
 import sys
@@ -21,6 +22,6 @@ proc = subprocess.Popen(['plantuml', '-t' + args.format, '-p'],
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE)
 text = '%s\n%s\n%s\n' % ('@startdot', read_stdin(), '@enddot')
-image = proc.communicate(text.encode('UTF-8'))[0]
+image = proc.communicate(text.encode('utf-8'))[0]
 
 write_file(args.output, image)
