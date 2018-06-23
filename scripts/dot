@@ -17,10 +17,10 @@ parser.add_argument('-T', dest='format', default='png')
 parser.add_argument('-o', dest='output', required=True)
 
 args = parser.parse_known_args()[0]
+proc = subprocess.Popen(['plantuml', '-t' + args.format, '-p'],
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE)
 text = '%s\n%s\n%s\n' % ('@startdot', read_stdin(), '@enddot')
-
-subprocess.check_output(['plantuml', '-t' + args.format, '-p'],
-                        stdin=stdin,
-                        stdout=file)
+image = proc.communicate(text.encode('UTF-8'))[0]
 
 write_file(args.output, image)
