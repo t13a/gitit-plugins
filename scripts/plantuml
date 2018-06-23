@@ -1,17 +1,25 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import argparse
 import os
 import plantuml
+import ssl
 import sys
 
-def read_from_stdin():
-    return"".join(sys.stdin.readlines())
+def ca_certs():
+    return os.getenv('PLANTUML_SERVER_CA_BUNDLE')
 
-def to_case_insensitive(strs):
+def read_stdin():
+    return "".join(sys.stdin.readlines())
+
+def to_lower(strs):
     return map(str.lower, strs)
 
-def write_to_stdout(data):
+def write_stderr(s):
+    print(s, file=sys.stderr)
+
+def write_stdout(data):
     try:
         sys.stdout.buffer.write(data)
     except AttributeError:
@@ -25,11 +33,19 @@ parser.add_argument('-tsvg', dest='format', action='store_const', const='svg')
 parser.add_argument('-ttxt', dest='format', action='store_const', const='txt')
 parser.add_argument('-p', '-pipe', action='store_true', required=True)
 
-args = parser.parse_known_args(args=to_case_insensitive(sys.argv))[0]
+args = parser.parse_known_args(args=to_lower(sys.argv))[0] # case insensitive
 url = '%s/%s/' % (os.getenv('PLANTUML_SERVER_URL',
                             'http://www.plantuml.com/plantuml'),
                   args.format)
-text = read_from_stdin()
-data = plantuml.PlantUML(url=url).processes(text)
+http_opts = { ca_certs: ca_certs() } # httplib2 don't use system CA certs
+puml = plantuml.PlantUML(url=url, http_opts=http_opts)
+text = read_stdin()
 
-write_to_stdout(data)
+try:
+    data = puml.processes(text)
+except PlantUMLHTTPError as e:
+    write_stderr('PlantUML server returned HTTP Error: %s\n%s' \
+                 % (e.message, e.content))
+    sys.exit(1)
+
+write_stdout(data)
