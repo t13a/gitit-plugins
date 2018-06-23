@@ -5,8 +5,17 @@ import os
 import plantuml
 import sys
 
-def to_case_insensitive(L):
-    return map(str.lower, L)
+def read_from_stdin():
+    return"".join(sys.stdin.readlines())
+
+def to_case_insensitive(strs):
+    return map(str.lower, strs)
+
+def write_to_stdout(data):
+    try:
+        sys.stdout.buffer.write(data)
+    except AttributeError:
+        sys.stdout.write(data)
 
 # immitate 'plantuml.jar' command (only support few options)
 parser = argparse.ArgumentParser()
@@ -17,9 +26,10 @@ parser.add_argument('-ttxt', dest='format', action='store_const', const='txt')
 parser.add_argument('-p', '-pipe', action='store_true', required=True)
 
 args = parser.parse_known_args(args=to_case_insensitive(sys.argv))[0]
-
-text = "".join(sys.stdin.readlines())
-url = "%s/%s/" % (os.getenv('PLANTUML_SERVER_URL',
+url = '%s/%s/' % (os.getenv('PLANTUML_SERVER_URL',
                             'http://www.plantuml.com/plantuml'),
                   args.format)
-sys.stdout.buffer.write(plantuml.PlantUML(url=url).processes(text))
+text = read_from_stdin()
+data = plantuml.PlantUML(url=url).processes(text)
+
+write_to_stdout(data)

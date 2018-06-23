@@ -2,6 +2,14 @@
 
 import argparse
 import subprocess
+import sys
+
+def read_from_stdin():
+    return"".join(sys.stdin.readlines())
+
+def write_to_file(path, data):
+    with open(path, 'wb') as output:
+        output.write(data)
 
 # immitate 'dot' command (only support few options)
 parser = argparse.ArgumentParser()
@@ -9,7 +17,7 @@ parser.add_argument('-T', dest='format', default='png')
 parser.add_argument('-o', dest='output', required=True)
 
 args = parser.parse_known_args()[0]
-data = subprocess.check_output(["plantuml", "-t" + args.format, "-p"])
+#text = '%s\n%s\n%s\n' % ('@startdot', read_from_stdin(), '@enddot')
+image = subprocess.check_output(['plantuml', '-t' + args.format, '-p'])
 
-with open(args.output, 'wb') as output:
-    output.write(data)
+write_to_file(args.output, image)
