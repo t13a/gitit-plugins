@@ -1,12 +1,14 @@
 #!/usr/bin/python
- # -*- coding: utf-8 -*-
- 
+
 import argparse
+import re
 import subprocess
 import sys
 
-def read_stdin():
-    return "".join(sys.stdin.readlines())
+def normalize(text):
+    def add_newline(s): # TODO report bug
+        return re.sub('^([^{]*{)', '\\1\n', s, flags=re.MULTILINE)
+    return '%s\n%s\n%s\n' % ('@startdot', add_newline(text), '@enddot')
 
 def write_file(path, data):
     with open(path, 'wb') as output:
@@ -21,7 +23,7 @@ args = parser.parse_known_args()[0]
 proc = subprocess.Popen(['plantuml', '-t' + args.format, '-p'],
                         stdin=subprocess.PIPE,
                         stdout=subprocess.PIPE)
-text = '%s\n%s\n%s\n' % ('@startdot', read_stdin(), '@enddot')
-image = proc.communicate(text.encode('utf-8'))[0]
+text = normalize(sys.stdin.read())
+image = proc.communicate(text)[0]
 
 write_file(args.output, image)

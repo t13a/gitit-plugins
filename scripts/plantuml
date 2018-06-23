@@ -1,6 +1,5 @@
 #!/usr/bin/python
- # -*- coding: utf-8 -*-
- 
+
 from __future__ import print_function
 import argparse
 import os
@@ -11,9 +10,6 @@ import sys
 def ca_certs():
     return os.getenv('PLANTUML_CA_BUNDLE',
                      ssl.get_default_verify_paths().cafile)
-
-def read_stdin():
-    return "".join(sys.stdin.readlines())
 
 def to_lower(strs):
     return map(str.lower, strs)
@@ -41,13 +37,14 @@ url = '%s/%s/' % (os.getenv('PLANTUML_SERVER_URL',
                   args.format)
 http_opts = {'ca_certs': ca_certs()} # httplib2 don't use system CA certs
 puml = plantuml.PlantUML(url=url, http_opts=http_opts)
-text = read_stdin()
+text = sys.stdin.read()
 
 try:
     data = puml.processes(text)
 except plantuml.PlantUMLHTTPError as e:
-    write_stderr('PlantUML server returned HTTP Error: %s\n%s' \
-                 % (e.message, e.content))
-    sys.exit(1)
+    if e.response.status == 400:
+        data = e.content
+    else:
+        raise e
 
 write_stdout(data)
