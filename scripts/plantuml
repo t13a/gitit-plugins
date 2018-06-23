@@ -1,12 +1,27 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 import argparse
 import os
 import plantuml
+import ssl
 import sys
 
-def to_case_insensitive(L):
-    return map(str.lower, L)
+def ca_certs():
+    return os.getenv('PLANTUML_CA_BUNDLE',
+                     ssl.get_default_verify_paths().cafile)
+
+def to_lower(strs):
+    return map(str.lower, strs)
+
+def write_stderr(s):
+    print(s, file=sys.stderr)
+
+def write_stdout(data):
+    try:
+        sys.stdout.buffer.write(data)
+    except AttributeError:
+        sys.stdout.write(data)
 
 # immitate 'plantuml.jar' command (only support few options)
 parser = argparse.ArgumentParser()
@@ -16,10 +31,20 @@ parser.add_argument('-tsvg', dest='format', action='store_const', const='svg')
 parser.add_argument('-ttxt', dest='format', action='store_const', const='txt')
 parser.add_argument('-p', '-pipe', action='store_true', required=True)
 
-args = parser.parse_known_args(args=to_case_insensitive(sys.argv))[0]
-
-text = "".join(sys.stdin.readlines())
-url = "%s/%s/" % (os.getenv('PLANTUML_SERVER_URL',
+args = parser.parse_known_args(args=to_lower(sys.argv))[0] # case insensitive
+url = '%s/%s/' % (os.getenv('PLANTUML_SERVER_URL',
                             'http://www.plantuml.com/plantuml'),
                   args.format)
-sys.stdout.buffer.write(plantuml.PlantUML(url=url).processes(text))
+http_opts = {'ca_certs': ca_certs()} # httplib2 don't use system CA certs
+puml = plantuml.PlantUML(url=url, http_opts=http_opts)
+text = sys.stdin.read()
+
+try:
+    data = puml.processes(text)
+except plantuml.PlantUMLHTTPError as e:
+    if e.response.status == 400:
+        data = e.content
+    else:
+        raise e
+
+write_stdout(data)
