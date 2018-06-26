@@ -52,7 +52,7 @@ transformBlock (CodeBlock (_, classes, namevals) contents) | "plantuml" `elem` c
     let attr = ("image", [], [])
     if ec == ExitSuccess
       then do
-        inh <- openFile (staticDir cfg </> "img" </> outfile) ReadWriteMode
+        inh <- openFile (staticDir cfg </> "img" </> outfile) WriteMode
         hPutStr inh out
         hClose inh
         return $ Para [Image attr name ("/img" </> outfile, "")]
