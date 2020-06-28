@@ -17,7 +17,7 @@ module PlantUml (plugin) where
 -- of the file contents.
 
 import GHC.IO.Handle
-import Network.Gitit.Interface
+import Network.Gitit.Interface hiding (Block, CodeBlock, Image, Para, Str)
 import System.Process (readProcessWithExitCode)
 import System.Exit (ExitCode(ExitSuccess))
 -- from the utf8-string package on HackageDB:
@@ -27,6 +27,7 @@ import Data.Digest.Pure.SHA (sha1, showDigest)
 import Data.String.Utils (startswith)
 import System.FilePath ((</>))
 import System.IO
+import Text.Pandoc.Legacy.Definition
 
 plugin :: Plugin
 plugin = mkPageTransformM transformBlock

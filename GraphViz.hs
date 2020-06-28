@@ -12,7 +12,7 @@ module GraphViz (plugin) where
 -- If no name is specified, a unique name will be generated from a hash
 -- of the file contents.
 
-import Network.Gitit.Interface
+import Network.Gitit.Interface hiding (Block, CodeBlock, Image, Para, Str)
 import System.Process (readProcessWithExitCode)
 import System.Exit (ExitCode(ExitSuccess))
 -- from the utf8-string package on HackageDB:
@@ -20,6 +20,7 @@ import Data.ByteString.Lazy.UTF8 (fromString)
 -- from the SHA package on HackageDB:
 import Data.Digest.Pure.SHA (sha1, showDigest)
 import System.FilePath ((</>))
+import Text.Pandoc.Legacy.Definition
 
 plugin :: Plugin
 plugin = mkPageTransformM transformBlock
